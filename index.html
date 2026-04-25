@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Дедлайн ДЗ</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Nunito:wght@400;600;700;800&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  min-height: 100vh;
+  overflow: hidden;
+  color: #fff;
+}
+
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.bg-animation {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 0;
+}
+
+.bg-circle {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  animation: float 8s ease-in-out infinite;
+}
+
+.bg-circle:nth-child(1) {
+  width: 300px; height: 300px;
+  top: -100px; left: -80px;
+  animation-delay: 0s;
+}
+
+.bg-circle:nth-child(2) {
+  width: 250px; height: 250px;
+  bottom: -80px; right: -60px;
+  animation-delay: -3s;
+}
+
+.bg-circle:nth-child(3) {
+  width: 200px; height: 200px;
+  top: 40%; left: 60%;
+  animation-delay: -5s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(20px, -20px) scale(1.05); }
+  66% { transform: translate(-15px, 15px) scale(0.95); }
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  width: 100%;
+  max-width: 360px;
+}
+
+.task-name {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  opacity: 0.7;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 32px;
+  line-height: 1.3;
+}
+
+.timer-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 32px;
+}
+
+.timer-block {
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 16px 8px;
+  min-width: 72px;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.timer-block:hover {
+  transform: translateY(-2px);
+}
+
+.timer-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+  transition: color 0.5s ease;
+}
+
+.timer-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  opacity: 0.5;
+  font-weight: 600;
+}
+
+.motivation {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin-bottom: 24px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: all 0.5s ease;
+}
+
+.progress-section {
+  margin-bottom: 20px;
+}
+
+.progress-bar-bg {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.1);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s ease;
+}
+
+.progress-text {
+  font-size: 12px;
+  opacity: 0.5;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  animation: pulse-badge 2s ease-in-out infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.expired .timer-value {
+  opacity: 0.3;
+}
+
+.expired .motivation {
+  font-size: 18px;
+}
+
+</style>
+</head>
+<body>
+<div class="container" id="app">
+  <div class="bg-animation">
+    <div class="bg-circle" id="circle1"></div>
+    <div class="bg-circle" id="circle2"></div>
+    <div class="bg-circle" id="circle3"></div>
+  </div>
+
+  <div class="content" id="content">
+    <div class="task-name" id="taskName">загрузка...</div>
+    <div class="title" id="title">Дедлайн ДЗ</div>
+
+    <div class="timer-container" id="timerContainer">
+      <div class="timer-block" id="block-d">
+        <div class="timer-value" id="days">--</div>
+        <div class="timer-label">дней</div>
+      </div>
+      <div class="timer-block" id="block-h">
+        <div class="timer-value" id="hours">--</div>
+        <div class="timer-label">часов</div>
+      </div>
+      <div class="timer-block" id="block-m">
+        <div class="timer-value" id="minutes">--</div>
+        <div class="timer-label">минут</div>
+      </div>
+      <div class="timer-block" id="block-s">
+        <div class="timer-value" id="seconds">--</div>
+        <div class="timer-label">секунд</div>
+      </div>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressBar"></div>
+      </div>
+      <div class="progress-text" id="progressText"></div>
+    </div>
+
+    <div class="motivation" id="motivation"></div>
+  </div>
+</div>
+
+<script>
+const tg = window.Telegram && window.Telegram.WebApp;
+if (tg) {
+  tg.ready();
+  tg.expand();
+}
+
+const params = new URLSearchParams(window.location.search);
+let deadlineStr = params.get('deadline');
+let taskName = params.get('task') || 'ДЗ';
+let totalHoursStr = params.get('total');
+
+if (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
+  const sp = tg.initDataUnsafe.start_param;
+  const parts = sp.split('__');
+  if (parts.length >= 2) {
+    deadlineStr = decodeURIComponent(parts[0]);
+    taskName = decodeURIComponent(parts[1].replace(/\+/g, ' '));
+    if (parts[2]) totalHoursStr = parts[2];
+  }
+}
+
+const deadline = deadlineStr ? new Date(deadlineStr) : new Date(Date.now() + 6 * 3600000);
+const totalMs = totalHoursStr ? parseFloat(totalHoursStr) * 3600000 : 7 * 24 * 3600000;
+const startTime = new Date(deadline.getTime() - totalMs);
+
+document.getElementById('taskName').textContent = taskName;
+document.getElementById('title').textContent = 'Сдать до ' + deadline.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+
+const phases = {
+  chill: {
+    bg: '#0a0a1a',
+    circles: ['#2d1b69', '#1b4332', '#1a3a5c'],
+    blocks: 'rgba(255,255,255,0.05)',
+    accent: '#a78bfa',
+    progress: '#a78bfa',
+    badge: null,
+    msgs: [
+      'Времени достаточно. Но лучше не откладывать',
+      'Спокойно делай — но не забывай, что дедлайн ближе, чем кажется',
+      'Сейчас самое время начать, пока не горит'
+    ]
+  },
+  attention: {
+    bg: '#0f0a1a',
+    circles: ['#4a1d96', '#1e3a5f', '#2d1b69'],
+    blocks: 'rgba(139,92,246,0.08)',
+    accent: '#c084fc',
+    progress: '#c084fc',
+    badge: null,
+    msgs: [
+      'Половина времени прошла. Как там ДЗ, красотка?',
+      'Если ещё не начала — самое время',
+      'Не тяни, потом будешь себе благодарна'
+    ]
+  },
+  hurry: {
+    bg: '#1a0a0a',
+    circles: ['#7c2d12', '#4a1d96', '#78350f'],
+    blocks: 'rgba(251,146,60,0.1)',
+    accent: '#fb923c',
+    progress: '#fb923c',
+    badge: { text: 'скоро дедлайн', bg: 'rgba(251,146,60,0.2)', color: '#fb923c' },
+    msgs: [
+      'Давай, красотка, ты же не хочешь сдавать на отвали',
+      'Осталось совсем чуть-чуть времени — докручивай!',
+      'Финишная прямая. Ты справишься'
+    ]
+  },
+  panic: {
+    bg: '#1a0505',
+    circles: ['#991b1b', '#7c2d12', '#6b0f0f'],
+    blocks: 'rgba(239,68,68,0.1)',
+    accent: '#ef4444',
+    progress: '#ef4444',
+    badge: { text: 'горит!', bg: 'rgba(239,68,68,0.25)', color: '#ef4444' },
+    msgs: [
+      'Ну ты чего, серьёзно? Давай, быстро!',
+      'Последние часы. Отправляй что есть — лучше сдать, чем не сдать',
+      'Не идеально — ок. Не сдано — не ок. Вперёд!'
+    ]
+  },
+  expired: {
+    bg: '#0a0a0a',
+    circles: ['#1c1917', '#1c1917', '#1c1917'],
+    blocks: 'rgba(255,255,255,0.03)',
+    accent: '#737373',
+    progress: '#737373',
+    badge: { text: 'дедлайн прошёл', bg: 'rgba(255,255,255,0.08)', color: '#a3a3a3' },
+    msgs: [
+      'Дедлайн прошёл. Но если можешь сдать с опозданием — сдавай',
+      'Лучше поздно, чем никогда. Отправляй!'
+    ]
+  }
+};
+
+function getPhase(remaining, total) {
+  if (remaining <= 0) return 'expired';
+  const pct = remaining / total;
+  if (pct > 0.6) return 'chill';
+  if (pct > 0.3) return 'attention';
+  if (pct > 0.08) return 'hurry';
+  return 'panic';
+}
+
+let currentPhase = null;
+
+function applyPhase(phase) {
+  if (phase === currentPhase) return;
+  currentPhase = phase;
+  const p = phases[phase];
+
+  document.body.style.background = p.bg;
+  document.getElementById('circle1').style.background = p.circles[0];
+  document.getElementById('circle2').style.background = p.circles[1];
+  document.getElementById('circle3').style.background = p.circles[2];
+
+  document.querySelectorAll('.timer-block').forEach(function(b) {
+    b.style.background = p.blocks;
+  });
+  document.querySelectorAll('.timer-value').forEach(function(v) {
+    v.style.color = p.accent;
+  });
+  document.getElementById('progressBar').style.background = p.progress;
+  document.getElementById('motivation').style.background = p.blocks;
+
+  var msgIdx = Math.floor(Math.random() * p.msgs.length);
+  document.getElementById('motivation').textContent = p.msgs[msgIdx];
+
+  if (phase === 'expired') {
+    document.getElementById('content').classList.add('expired');
+  }
+
+  if (p.badge) {
+    var existing = document.getElementById('statusBadge');
+    if (!existing) {
+      existing = document.createElement('div');
+      existing.id = 'statusBadge';
+      existing.className = 'status-badge';
+      document.getElementById('timerContainer').insertAdjacentElement('beforebegin', existing);
+    }
+    existing.textContent = p.badge.text;
+    existing.style.background = p.badge.bg;
+    existing.style.color = p.badge.color;
+  }
+}
+
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+function tick() {
+  var now = new Date();
+  var diff = deadline.getTime() - now.getTime();
+  var totalDiff = deadline.getTime() - startTime.getTime();
+
+  var phase = getPhase(diff, totalDiff);
+  applyPhase(phase);
+
+  if (diff <= 0) {
+    document.getElementById('days').textContent = '00';
+    document.getElementById('hours').textContent = '00';
+    document.getElementById('minutes').textContent = '00';
+    document.getElementById('seconds').textContent = '00';
+    document.getElementById('progressBar').style.width = '100%';
+    document.getElementById('progressText').textContent = 'Время вышло';
+    return;
+  }
+
+  var d = Math.floor(diff / 86400000);
+  var h = Math.floor((diff % 86400000) / 3600000);
+  var m = Math.floor((diff % 3600000) / 60000);
+  var s = Math.floor((diff % 60000) / 1000);
+
+  document.getElementById('days').textContent = pad(d);
+  document.getElementById('hours').textContent = pad(h);
+  document.getElementById('minutes').textContent = pad(m);
+  document.getElementById('seconds').textContent = pad(s);
+
+  var elapsed = totalDiff - diff;
+  var pct = Math.min(100, Math.round((elapsed / totalDiff) * 100));
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressText').textContent = 'Прошло ' + pct + '% времени';
+}
+
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
